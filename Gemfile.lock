@@ -318,6 +318,11 @@ GEM
     thruster (0.1.11-arm64-darwin)
     thruster (0.1.11-x86_64-linux)
     timeout (0.4.3)
+    timescaledb (0.3.2)
+      activerecord
+      activesupport
+      ostruct
+      pg (~> 1.2)
     turbo-rails (2.0.13)
       actionpack (>= 7.1.0)
       railties (>= 7.1.0)
@@ -371,6 +376,7 @@ DEPENDENCIES
   solid_queue
   stimulus-rails
   thruster
+  timescaledb (~> 0.3.2)
   turbo-rails
   tzinfo-data
   web-console

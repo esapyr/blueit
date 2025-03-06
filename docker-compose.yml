@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17.4-alpine
+    image: timescale/timescaledb-ha:pg17
     restart: always
     environment:
       - POSTGRES_USER=postgres
