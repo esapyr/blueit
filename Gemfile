@@ -40,6 +40,8 @@ gem "thruster", require: false
 # adapter for postgres time series extension
 gem "timescaledb", "~> 0.3.2"
 
+gem "http", "~> 5.2"
+
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
@@ -64,3 +66,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "tailwindcss-ruby", "~> 4.0"
+
+gem "tailwindcss-rails", "~> 4.2"

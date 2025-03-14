@@ -2,37 +2,33 @@
 # this works for now though
 class JetstreamIngester
   JETSTREAM_SUBSCRIPTION_ENDPOINT = "wss://jetstream2.us-east.bsky.network/subscribe"
-  DEFAULT_JETSTREAM_COLLECTION = "app.bsky.feed.post"
+
+  JQ_FILTERS = [
+    LANGUAGE_FILTER = 'if .commit.record.langs == null then . else select(.commit.record.langs | contains(["en"])) end',
+    NOT_REPLY_FILTER = "select(.commit.record.reply | not)",
+    NEW_RECORD_FILTER = 'select(.commit.operation == "create")',
+    CONTAINS_LINK_FILTER = "select(isempty(.commit.record.facets[]?.features[]?.uri) | not)"
+  ]
+
+  JETSTREAM_COLLECTIONS = [
+    JETSTREAM_POST = "app.bsky.feed.post"
+  ]
+
+  DEFAULT_JETSTREAM_COLLECTION = JETSTREAM_POST
 
   def initialize(collection: DEFAULT_JETSTREAM_COLLECTION)
     @collection = collection
   end
 
   def start
-    Rails.logger.info("Starting ingestion from: #{jetstream_ws_url}")
+    puts "Starting ingestion from: #{jetstream_ws_url}"
 
     stream_from_jetstream do |raw_line|
-      post = JSON.parse(raw_line, symbolize_names: true)
-
-      begin
-        url = URI.parse(post[:link])
-      rescue URI::InvalidURIError => e
-        Rails.logger.warn("Failed to parse url #{post[:link]} with: #{e.full_message}")
-        next
-      end
-
-      Link.create!(
-        url: url.to_s,
-        created_at: post[:created_at],
-        scheme: url.scheme,
-        host: url.host,
-        path: url.path,
-        query: url.query
-      )
+      LinkIngestionJob.perform_later(raw_line)
+      print "."
     end
-
   ensure
-    Rails.logger.info("Ending ingestion from #{jetstream_ws_url}")
+    puts "Ending ingestion from #{jetstream_ws_url}"
   end
 
   private
@@ -54,10 +50,11 @@ class JetstreamIngester
 
   def raw_stream_jq_filters
     @raw_stream_jq_filters ||= [
-      ".",
-      '{text: .commit.record.text, type: .commit.record."$type", did: .did, rkey: .commit.rkey, link: .commit.record.facets[]?.features[]?.uri, kind: .kind, op: .commit.operation, langs: .commit.record.langs, createdAt: .commit.record.createdAt}',
-      'select(.kind == "commit")',
-      "select(.link != null)"
+      # NOTE: the order here matters, we can only check the lang of new posts, etc
+      NEW_RECORD_FILTER,
+      NOT_REPLY_FILTER,
+      LANGUAGE_FILTER,
+      CONTAINS_LINK_FILTER
     ].join(" | ")
   end
 end

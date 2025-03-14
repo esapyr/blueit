@@ -1,4 +1,47 @@
 services:
+  web:
+    image: ruby:3.4.2
+    working_dir: /app
+    volumes: 
+      - .:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: bash -c "bundle install && bin/rails db:prepare && bin/rails server -b '0.0.0.0'"
+    depends_on:
+      - db
+  background_jobs:
+    image: ruby:3.4.2
+    working_dir: /app
+    volumes: 
+      - .:/app
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: bash -c "bundle install && bin/jobs start"
+    depends_on:
+      - db
+      - web
+  link_ingestion:
+    build:
+      context: .
+      dockerfile: development.Dockerfile
+      network: host
+    working_dir: /app
+    volumes: 
+      - .:/app
+    environment:
+      - RAILS_ENV=development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: sleep infinity #bash -c "bin/rails jetstream:ingest_links"
+    depends_on:
+      - db
+      - web
   db:
     image: timescale/timescaledb-ha:pg17
     restart: always
@@ -9,7 +52,6 @@ services:
       - '5432:5432'
     volumes: 
       - db:/var/lib/postgresql/data
-
 volumes:
   db:
     driver: local

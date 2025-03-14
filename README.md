@@ -20,6 +20,11 @@ This is going to be using a daemon to run a rake task that continually streams l
   - Allow people to create "topics" (aka subreddits) that filter content and boost particular sites.
 - Interaction with the site.
   - Should interaction write to bluesky using their data models that we creatively reinterpret?
+
+### Link cleaning
+- How should we handle subdomains?
+  - treat www subdomains like they dont exist?
+  - Other subdomains might be fine to keep.
 - How should we handle query params?
   - Sometimes they dont meaningfully impact what's on the page, other times you can see wildely different content based on the query params.
 - How should we handle shortened links?
